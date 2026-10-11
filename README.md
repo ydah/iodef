@@ -1,25 +1,47 @@
-# IODEF
+<h1 align="center">IODEF</h1>
+
+<p align="center">Incident reports in JSON, CBOR, and XML.</p>
+
+<p align="center">
+  <a href="https://rubygems.org/gems/iodef"><img src="https://img.shields.io/gem/v/iodef" alt="Gem version"></a>
+  <a href="https://github.com/ydah/iodef/actions/workflows/main.yml"><img src="https://github.com/ydah/iodef/actions/workflows/main.yml/badge.svg?branch=main" alt="CI"></a>
+  <a href="https://www.ruby-lang.org/"><img src="https://img.shields.io/badge/Ruby-%3E%3D%203.3-CC342D?logo=ruby&amp;logoColor=white" alt="Ruby 3.3 or later"></a>
+  <a href="LICENSE.txt"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT License"></a>
+</p>
+
+<p align="center">
+  <a href="#installation">Installation</a> &middot;
+  <a href="#quick-start">Quick start</a> &middot;
+  <a href="#scope">Scope</a> &middot;
+  <a href="#development">Development</a> &middot;
+  <a href="#license">License</a>
+</p>
 
 Read, validate, build, and exchange IODEF v2 incident reports as JSON, CBOR, or XML ([RFC 8727](https://www.rfc-editor.org/rfc/rfc8727.html) and [RFC 7970](https://www.rfc-editor.org/rfc/rfc7970.html)).
+
+## Features
+
+- Build incident reports with typed models and multilingual descriptions.
+- Exchange JSON, built-in CBOR, and namespace-aware RFC 7970 XML.
+- Validate reports with JSON Pointer diagnostics and configurable resource limits.
+
+## Installation
+
+Add the gem to your Gemfile:
+
+```ruby
+gem "iodef"
+```
+
+Then run `bundle install`.
+
+Ruby 3.3 or newer, JRuby, and TruffleRuby are supported. Runtime dependencies are the Ruby standard libraries `json` (2.19.4 or newer, including 3.x) and `rexml` (3.4.4 or newer, below 4); no other gem from this project is required. `IODEF` and `Iodef` refer to the same module.
+
+## Quick start
 
 ```ruby
 require "iodef"
 
-document = IODEF.parse(json)
-incident = document.incidents.first
-incident.incident_id
-incident.contacts.first.role
-incident.description.text("ja")
-
-issues = IODEF.validate(json)
-issues.each { |issue| puts "#{issue.pointer}: #{issue.rule}: #{issue.message}" }
-```
-
-Install with `gem install iodef`. Ruby 3.3 or newer, JRuby, and TruffleRuby are supported. Runtime dependencies are the Ruby standard libraries `json` (2.19.4 or newer, including 3.x) and `rexml` (3.4.4 or newer, below 4); no other gem from this project is required. `IODEF` and `Iodef` refer to the same module.
-
-## Build and edit a report
-
-```ruby
 document = IODEF::Document.build(lang: "en") do |doc|
   doc.add_incident(purpose: "reporting") do |incident|
     incident.incident_id = { id: "case-24", name: "response.example" }
@@ -33,11 +55,18 @@ document = IODEF::Document.build(lang: "en") do |doc|
 end
 
 json = document.to_json
+copy = IODEF.parse(json)
+copy.incidents.first.incident_id
+copy.incidents.first.contacts.first.role # => "creator"
+copy.incidents.first.description.text("ja") # => "不審な通信"
+IODEF.validate(json) # => []
 ```
 
 Builders require the incident's ID, generation time, and at least one contact. They do not invent reporting identities or timestamps. Known properties use snake_case accessors; wire property names retain their RFC spelling. `Document`, `Incident`, `Contact`, `Assessment`, `EventData`, and `Indicator` have typed views. Other objects are ordinary hashes. Plural conveniences include `incidents`, `contacts`, `assessments`, and `indicators`.
 
 Typed child views update their document. `[]` exposes the underlying value, `[]=` copies the assigned value, and `to_h` returns a detached copy. Symbols in builder hashes become strings. Unknown JSON properties are preserved, including nested values and large integers. Defaults such as restriction levels are not inserted into the source data.
+
+`description.text(language)` selects an exact language match, then a matching language prefix. Plain JSON strings mean English. Multilingual objects without `lang` inherit the incident or document language; an empty `lang` resets that inheritance. With no match or no requested language, the accessor prefers the first plain string or object without an explicit language, then the first entry.
 
 ## Validation and limits
 
@@ -92,7 +121,7 @@ Numeric literals use Ruby integers and floats. Other consumers that apply XML Sc
 
 ## Scope
 
-| Supported in 0.2.0 | Outside 0.2.0 |
+| Supported | Outside this release |
 | --- | --- |
 | JSON binding, all RFC 8727 class/property definitions | Ambiguous binary XML structures and vendor extension semantics |
 | Typed core models, multilingual text, builders | RID or other exchange transports |
@@ -124,6 +153,10 @@ bundle exec ruby script/benchmark.rb 5000
 The fixture task verifies SHA-256-pinned RFC/IANA sources, retains source notices, and regenerates examples under ignored `tmp/rfc/`. Tests check both complete RFC JSON and CBOR examples, both complete RFC 7970 XML documents, every CDDL object property, and the numeric map assignments. The printed XML campaign example uses the unregistered `fqdn` value; its derived fixture uses `domain-name` as described in [reported erratum 6163](https://www.rfc-editor.org/errata/eid6163), while the original remains a negative test. Original wire-format tests cover integer widths, floating-point precision, UTF-8 chunk boundaries, duplicate keys, tags, malformed values, limits, and randomized round trips. XML tests cover namespaces, language inheritance, escaping, DTD rejection, and bounded parsing. Reference data keeps its own license and notices even though it is not distributed with the gem.
 
 `script/update_registry.rb` audits the pinned IANA metadata. `--refresh` downloads the current registry, rejects unexplained differences, and updates its checksum only after the audit succeeds. Review RFC errata and registry changes before refreshing. No downloaded reference material is tracked or included in the gem.
+
+## Contributing
+
+Bug reports and pull requests are welcome on [GitHub](https://github.com/ydah/iodef/issues). See [Development](#development) for the checks to run before submitting a change. Report security vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
 
 ## License
 
