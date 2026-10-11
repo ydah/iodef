@@ -1,0 +1,282 @@
+# Implementation metadata. Sections refer to RFC 7970;
+# JSON cardinalities and property spellings follow RFC 8727 sections 2 and 3.
+# A trailing ! requires a property; [] denotes a nonempty list when present.
+groups:
+  restricted: {restriction: restriction, ext-restriction: string}
+  observable: {observable-id: id}
+  described: {Description: 'mlstring[]'}
+  extensible: {AdditionalData: 'Extension[]'}
+  temporal: {DetectTime: datetime, StartTime: datetime, EndTime: datetime, RecoveryTime: datetime, ReportTime: datetime}
+  linked: {URL: 'uri[]'}
+  structured: {SpecID: 'spec_id!', ext-SpecID: string, ContentID: string, RawData: 'binary[]', Reference: 'Reference[]'}
+types:
+  Document:
+    section: '3.1'
+    groups: [extensible]
+    fields: {version: 'version!', lang: language, format-id: string, private-enum-name: string, private-enum-id: string, Incident: 'Incident[]!'}
+  Incident:
+    section: '3.2'
+    groups: [restricted, observable, described, extensible, temporal]
+    fields: {purpose: 'purpose!', ext-purpose: string, status: status, ext-status: string, lang: language, IncidentID: 'IncidentID!', AlternativeID: AlternativeID, RelatedActivity: 'RelatedActivity[]', GenerationTime: 'datetime!', Discovery: 'Discovery[]', Assessment: 'Assessment[]', Method: 'Method[]', Contact: 'Contact[]!', EventData: 'EventData[]', Indicator: 'Indicator[]', History: History}
+  IncidentID:
+    section: '3.4'
+    groups: [restricted]
+    fields: {id: 'string!', name: 'string!', instance: string}
+  AlternativeID:
+    section: '3.5'
+    groups: [restricted]
+    fields: {IncidentID: 'IncidentID[]!'}
+  RelatedActivity:
+    section: '3.6'
+    groups: [restricted, described, extensible, linked]
+    fields: {IncidentID: 'IncidentID[]', ThreatActor: 'ThreatActor[]', Campaign: 'Campaign[]', IndicatorID: 'IndicatorID[]', Confidence: Confidence}
+    at_least_one: [IncidentID, URL, ThreatActor, Campaign, IndicatorID, Confidence, Description, AdditionalData]
+  ThreatActor:
+    section: '3.7'
+    groups: [restricted, described, extensible, linked]
+    fields: {ThreatActorID: 'string[]'}
+    at_least_one: [ThreatActorID, URL, Description, AdditionalData]
+  Campaign:
+    section: '3.8'
+    groups: [restricted, described, extensible, linked]
+    fields: {CampaignID: 'string[]'}
+    at_least_one: [CampaignID, URL, Description, AdditionalData]
+  Contact:
+    section: '3.9'
+    groups: [restricted, described, extensible]
+    fields: {role: 'contact_role!', ext-role: string, type: 'contact_type!', ext-type: string, ContactName: 'mlstring[]', ContactTitle: 'mlstring[]', RegistryHandle: 'RegistryHandle[]', PostalAddress: 'PostalAddress[]', Email: 'Email[]', Telephone: 'Telephone[]', Timezone: timezone, Contact: 'Contact[]'}
+    at_least_one: [ContactName, ContactTitle, Description, RegistryHandle, PostalAddress, Email, Telephone, Timezone, Contact, AdditionalData]
+  RegistryHandle:
+    section: '3.9.1'
+    fields: {handle: 'string!', registry: 'registry!', ext-registry: string}
+  PostalAddress:
+    section: '3.9.2'
+    groups: [described]
+    fields: {type: postal_type, ext-type: string, PAddress: 'mlstring!'}
+  Email:
+    section: '3.9.3'
+    groups: [described]
+    fields: {type: email_type, ext-type: string, EmailTo: 'string!'}
+  Telephone:
+    section: '3.9.4'
+    groups: [described]
+    fields: {type: telephone_type, ext-type: string, TelephoneNumber: 'string!'}
+  Discovery:
+    section: '3.10'
+    groups: [restricted, described]
+    fields: {source: discovery_source, ext-source: string, Contact: 'Contact[]', DetectionPattern: 'DetectionPattern[]'}
+  DetectionPattern:
+    section: '3.10.1'
+    groups: [restricted, observable, described]
+    fields: {DetectionConfiguration: 'string[]', Application: 'Software!'}
+    at_least_one: [Description, DetectionConfiguration]
+  Method:
+    section: '3.11'
+    groups: [restricted, described, extensible]
+    fields: {Reference: 'Reference[]', AttackPattern: 'StructuredInformation[]', Vulnerability: 'StructuredInformation[]', Weakness: 'StructuredInformation[]'}
+    at_least_one: [Reference, Description, AttackPattern, Vulnerability, Weakness, AdditionalData]
+  Reference:
+    section: '3.11.1'
+    groups: [observable, described, linked]
+    fields: {ReferenceName: ReferenceName}
+    at_least_one: [ReferenceName, URL, Description]
+  ReferenceName:
+    section: '3.11.1.1'
+    fields: {specIndex: 'integer!', ID: 'id!'}
+  Assessment:
+    section: '3.12'
+    groups: [restricted, observable, extensible]
+    fields: {occurrence: occurrence, IncidentCategory: 'mlstring[]', Impact: 'Impact[]!', Counter: 'Counter[]', MitigatingFactor: 'mlstring[]', Cause: 'mlstring[]', Confidence: Confidence}
+  Impact:
+    section: '3.12'
+    fields: {SystemImpact: SystemImpact, BusinessImpact: BusinessImpact, TimeImpact: TimeImpact, MonetaryImpact: MonetaryImpact, IntendedImpact: BusinessImpact}
+    exactly_one: [SystemImpact, BusinessImpact, TimeImpact, MonetaryImpact, IntendedImpact]
+  SystemImpact:
+    section: '3.12.1'
+    groups: [described]
+    fields: {type: 'system_impact!', ext-type: string, severity: severity, completion: completion}
+  BusinessImpact:
+    section: '3.12.2'
+    groups: [described]
+    fields: {type: 'business_impact!', ext-type: string, severity: business_severity, ext-severity: string}
+  TimeImpact:
+    section: '3.12.3'
+    fields: {value: 'positive!', severity: severity, metric: 'time_metric!', ext-metric: string, duration: duration, ext-duration: string}
+  MonetaryImpact:
+    section: '3.12.4'
+    fields: {value: 'positive!', severity: severity, currency: string}
+  Confidence:
+    section: '3.12.5'
+    fields: {rating: 'rating!', ext-rating: string, value: number}
+  History:
+    section: '3.13'
+    groups: [restricted]
+    fields: {HistoryItem: 'HistoryItem[]!'}
+  HistoryItem:
+    section: '3.13.1'
+    groups: [restricted, observable, described, extensible]
+    fields: {action: 'action!', ext-action: string, DateTime: 'datetime!', IncidentID: IncidentID, Contact: Contact, DefinedCOA: 'string[]'}
+  EventData:
+    section: '3.14'
+    groups: [restricted, observable, described, extensible, temporal]
+    fields: {Contact: 'Contact[]', Discovery: 'Discovery[]', Assessment: Assessment, Method: 'Method[]', System: 'System[]', Expectation: 'Expectation[]', RecordData: 'RecordData[]', EventData: 'EventData[]'}
+    at_least_one: [Description, DetectTime, StartTime, EndTime, RecoveryTime, ReportTime, Contact, Discovery, Assessment, Method, System, Expectation, RecordData, EventData, AdditionalData]
+  Expectation:
+    section: '3.15'
+    groups: [restricted, observable, described]
+    fields: {action: action, ext-action: string, severity: severity, DefinedCOA: 'string[]', StartTime: datetime, EndTime: datetime, Contact: Contact}
+  System:
+    section: '3.17'
+    groups: [restricted, observable, described, extensible]
+    fields: {category: system_category, ext-category: string, interface: string, spoofed: yes_no_unknown, virtual: yes_no_unknown, ownership: ownership, ext-ownership: string, Node: 'Node!', NodeRole: 'NodeRole[]', Service: 'Service[]', OperatingSystem: 'Software[]', Counter: 'Counter[]', AssetID: 'string[]'}
+  Node:
+    section: '3.18'
+    fields: {DomainData: 'DomainData[]', Address: 'Address[]', PostalAddress: PostalAddress, Location: 'mlstring[]', Counter: 'Counter[]'}
+    at_least_one: [DomainData, Address]
+  Address:
+    section: '3.18.1'
+    groups: [observable]
+    fields: {value: 'string!', category: 'address_category!', ext-category: string, vlan-name: string, vlan-num: integer}
+  NodeRole:
+    section: '3.18.2'
+    groups: [described]
+    fields: {category: 'node_category!', ext-category: string}
+  Counter:
+    section: '3.18.3'
+    fields: {value: 'number!', type: 'counter_type!', ext-type: string, unit: 'counter_unit!', ext-unit: string, meaning: string, duration: duration, ext-duration: string}
+  DomainData:
+    section: '3.19'
+    groups: [observable]
+    fields: {system-status: 'system_status!', ext-system-status: string, domain-status: 'domain_status!', ext-domain-status: string, Name: 'string!', DateDomainWasChecked: datetime, RegistrationDate: datetime, ExpirationDate: datetime, RelatedDNS: 'Extension[]', NameServers: 'NameServers[]', DomainContacts: DomainContacts}
+  NameServers:
+    section: '3.19.1'
+    fields: {Server: 'string!', Address: 'Address[]!'}
+  DomainContacts:
+    section: '3.19.2'
+    fields: {SameDomainContact: string, Contact: 'Contact[]'}
+    exactly_one: [SameDomainContact, Contact]
+  Service:
+    section: '3.20'
+    groups: [observable]
+    fields: {ip-protocol: integer, ServiceName: ServiceName, Port: integer, Portlist: portlist, ProtoCode: integer, ProtoType: integer, ProtoField: integer, ApplicationHeaderField: 'Extension[]', EmailData: EmailData, Application: Software}
+    at_least_one: [ServiceName, Port, Portlist, ProtoCode, ProtoType, ProtoField, ApplicationHeaderField, EmailData, Application]
+  ServiceName:
+    section: '3.20.1'
+    groups: [described, linked]
+    fields: {IANAService: string}
+    at_least_one: [IANAService, URL, Description]
+  EmailData:
+    section: '3.21'
+    groups: [observable]
+    fields: {EmailTo: 'string[]', EmailFrom: string, EmailSubject: string, EmailX-Mailer: string, EmailHeaderField: 'Extension[]', EmailHeaders: string, EmailBody: string, EmailMessage: string, HashData: 'HashData[]', Signature: 'binary[]'}
+  RecordData:
+    section: '3.22'
+    groups: [restricted, observable, described, extensible, linked]
+    fields: {DateTime: datetime, Application: Software, RecordPattern: 'RecordPattern[]', RecordItem: 'Extension[]', FileData: 'FileData[]', WindowsRegistryKeysModified: 'WindowsRegistryKeysModified[]', CertificateData: 'CertificateData[]'}
+    at_least_one: [RecordItem, FileData, WindowsRegistryKeysModified, CertificateData]
+  RecordPattern:
+    section: '3.22.1'
+    fields: {value: 'string!', type: 'pattern_type!', ext-type: string, offset: integer, offsetunit: offset_unit, ext-offsetunit: string, instance: integer}
+  WindowsRegistryKeysModified:
+    section: '3.23'
+    groups: [observable]
+    fields: {Key: 'Key[]!'}
+  Key:
+    section: '3.23.1'
+    groups: [observable]
+    fields: {registryaction: registry_action, ext-registryaction: string, KeyName: 'string!', KeyValue: string}
+  CertificateData:
+    section: '3.24'
+    groups: [restricted, observable]
+    fields: {Certificate: 'Certificate[]!'}
+  Certificate:
+    section: '3.24.1'
+    groups: [observable, described]
+    fields: {X509Data: 'binary!'}
+  FileData:
+    section: '3.25'
+    groups: [restricted, observable]
+    fields: {File: 'File[]!'}
+  File:
+    section: '3.25.1'
+    groups: [observable, linked]
+    fields: {FileName: string, FileSize: integer, FileType: string, HashData: HashData, Signature: 'binary[]', AssociatedSoftware: Software, FileProperties: 'Extension[]'}
+  HashData:
+    section: '3.26'
+    fields: {scope: 'hash_scope!', ext-scope: string, HashTargetID: string, Hash: 'Digest[]', FuzzyHash: 'FuzzyHash[]'}
+    at_least_one: [Hash, FuzzyHash]
+  Digest:
+    section: '3.26.1'
+    fields: {DigestMethod: 'binary!', DigestValue: 'binary!', CanonicalizationMethod: binary, Application: Software}
+  FuzzyHash:
+    section: '3.26.2'
+    groups: [extensible]
+    fields: {FuzzyHashValue: 'Extension[]!', Application: Software}
+  Indicator:
+    section: '3.29'
+    groups: [restricted, described, extensible]
+    fields: {IndicatorID: 'IndicatorID!', AlternativeIndicatorID: 'AlternativeIndicatorID[]', StartTime: datetime, EndTime: datetime, Confidence: Confidence, Contact: 'Contact[]', Observable: Observable, uid-ref: id, IndicatorExpression: IndicatorExpression, IndicatorReference: IndicatorReference, NodeRole: 'NodeRole[]', AttackPhase: 'AttackPhase[]', Reference: 'Reference[]'}
+    exactly_one: [Observable, uid-ref, IndicatorExpression, IndicatorReference]
+  IndicatorID:
+    section: '3.29.1'
+    fields: {id: 'id!', name: 'string!', version: 'string!'}
+  AlternativeIndicatorID:
+    section: '3.29.2'
+    groups: [restricted]
+    fields: {IndicatorID: 'IndicatorID[]!'}
+  Observable:
+    section: '3.29.3'
+    groups: [restricted]
+    fields: {System: System, Address: Address, DomainData: DomainData, EmailData: EmailData, Service: Service, WindowsRegistryKeysModified: WindowsRegistryKeysModified, FileData: FileData, CertificateData: CertificateData, RegistryHandle: RegistryHandle, RecordData: RecordData, EventData: EventData, Incident: Incident, Expectation: Expectation, Reference: Reference, Assessment: Assessment, DetectionPattern: DetectionPattern, HistoryItem: HistoryItem, BulkObservable: BulkObservable, AdditionalData: 'Extension[]'}
+    exactly_one: [System, Address, DomainData, EmailData, Service, WindowsRegistryKeysModified, FileData, CertificateData, RegistryHandle, RecordData, EventData, Incident, Expectation, Reference, Assessment, DetectionPattern, HistoryItem, BulkObservable, AdditionalData]
+  BulkObservable:
+    section: '3.29.3.1'
+    groups: [extensible]
+    fields: {type: bulk_type, ext-type: string, BulkObservableFormat: BulkObservableFormat, BulkObservableList: 'string!'}
+  BulkObservableFormat:
+    section: '3.29.3.1.1'
+    groups: [extensible]
+    fields: {Hash: Digest}
+    at_least_one: [Hash, AdditionalData]
+  IndicatorExpression:
+    section: '3.29.4'
+    groups: [extensible]
+    fields: {operator: operator, ext-operator: string, IndicatorExpression: 'IndicatorExpression[]', Observable: 'Observable[]', uid-ref: 'id[]', IndicatorReference: 'IndicatorReference[]', Confidence: Confidence}
+    at_least_one: [IndicatorExpression, Observable, uid-ref, IndicatorReference]
+  IndicatorReference:
+    section: '3.29.7'
+    fields: {uid-ref: id, euid-ref: string, version: string}
+    exactly_one: [uid-ref, euid-ref]
+  AttackPhase:
+    section: '3.29.8'
+    groups: [described, extensible, linked]
+    fields: {AttackPhaseID: 'string[]'}
+    at_least_one: [AttackPhaseID, URL, Description, AdditionalData]
+  MLString:
+    section: '2.4'
+    fields: {value: 'string!', lang: language, translation-id: string}
+  Software:
+    section: '2.15'
+    groups: [linked, described]
+    fields: {SoftwareReference: SoftwareReference}
+    at_least_one: [SoftwareReference, URL, Description]
+  SoftwareReference:
+    section: '2.15.1'
+    fields: {value: string, spec-name: 'software_spec!', ext-spec-name: string, dtype: software_dtype, ext-dtype: string}
+  StructuredInformation:
+    section: 'RFC8727 2.2.5'
+    groups: [structured]
+    fields: {Platform: 'Platform[]', Scoring: 'Scoring[]'}
+    at_most_one: [RawData, Reference]
+  Platform:
+    section: 'RFC8727 2.2.5'
+    groups: [structured]
+    fields: {}
+  Scoring:
+    section: 'RFC8727 2.2.5'
+    groups: [structured]
+    fields: {}
+  Extension:
+    section: '2.16'
+    groups: [restricted, observable]
+    fields: {value: 'string!', name: string, dtype: 'dtype!', ext-dtype: string, meaning: string, formatid: string}

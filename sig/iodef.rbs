@@ -1,0 +1,278 @@
+module Iodef
+  VERSION: String
+  DEFAULT_LIMITS: Hash[Symbol, Integer]
+  SCHEMA: Hash[String, untyped]
+  ENUMS: Hash[String, Array[String]]
+  MAPKEYS: Hash[String, Integer]
+  KEYNAMES: Hash[Integer, String]
+
+  def self.parse: (String source, ?strict: bool, ?validate: bool, **Integer limits) -> Document
+  def self.parse_cbor: (String source, ?strict: bool, ?validate: bool, **Integer limits) -> Document
+  def self.validate: (untyped source, **Integer limits) -> Array[Violation]
+  def self.generate_json: (untyped value, ?untyped options) -> String
+  def self.pointer: (String parent, untyped key) -> String
+
+  class Violation
+    attr_reader pointer: String
+    attr_reader rule: String
+    attr_reader message: String
+    def self.new: (pointer: String, rule: String, message: String) -> instance
+  end
+  class Error < StandardError
+  end
+  class ParseError < Error
+  end
+  class ConversionError < Error
+  end
+  class ValidationError < Error
+    attr_reader pointer: String
+    attr_reader violations: Array[Violation]
+    def initialize: (?String message, ?pointer: String, ?violations: Array[Violation]) -> void
+  end
+  class LimitError < ValidationError
+  end
+  class Validator
+    attr_reader limits: Hash[Symbol, Integer]
+    def initialize: (**Integer limits) -> void
+    def validate: (untyped value, ?type: String) -> Array[Violation]
+  end
+  class Model
+    attr_reader limits: Hash[Symbol, Integer]
+    attr_reader warnings: Array[Violation]
+    def initialize: (?Hash[untyped, untyped] data, ?strict: bool, **Integer limits) -> void
+    def []: (String | Symbol key) -> untyped
+    def []=: (String | Symbol key, untyped value) -> untyped
+    def delete: (String | Symbol key) -> untyped
+    def to_h: () -> Hash[String, untyped]
+    def to_json: (?untyped options) -> String
+    def validate!: () -> self
+    def description: () -> MultilingualText
+    def description=: (Array[untyped] value) -> untyped
+  end
+  class MultilingualText
+    include Enumerable[untyped]
+    def initialize: (untyped values, ?lang: String?) -> void
+    def each: () { (untyped) -> untyped } -> Array[untyped]
+            | () -> Enumerator[untyped, Array[untyped]]
+    def text: (?String? language) -> String?
+    def to_a: () -> Array[untyped]
+  end
+  class Document < Model
+    def self.build: (?lang: String?, **Integer limits) { (Document) -> untyped } -> Document
+    def incidents: () -> Array[Incident]
+    def add_incident: (purpose: String, **untyped attributes) ?{ (Incident) -> untyped } -> Incident
+    def to_cbor: () -> String
+  end
+  class Incident < Model
+    def contacts: () -> Array[Contact]
+    def assessments: () -> Array[Assessment]
+    def indicators: () -> Array[Indicator]
+    def add_contact: (role: String, type: String, **untyped attributes) ?{ (Contact) -> untyped } -> Contact
+  end
+  class Contact < Model
+  end
+  class Assessment < Model
+  end
+  class EventData < Model
+  end
+  class Indicator < Model
+  end
+end
+module IODEF = Iodef
+
+module Iodef
+  class Document < Model
+    def additional_data: () -> (Array[Hash[String, untyped]])?
+    def additional_data=: (untyped value) -> untyped
+    def version: () -> (String)?
+    def version=: (untyped value) -> untyped
+    def lang: () -> (String)?
+    def lang=: (untyped value) -> untyped
+    def format_id: () -> (String)?
+    def format_id=: (untyped value) -> untyped
+    def private_enum_name: () -> (String)?
+    def private_enum_name=: (untyped value) -> untyped
+    def private_enum_id: () -> (String)?
+    def private_enum_id=: (untyped value) -> untyped
+    def incident: () -> (Array[Incident])?
+    def incident=: (untyped value) -> untyped
+  end
+  class Incident < Model
+    def restriction: () -> (String)?
+    def restriction=: (untyped value) -> untyped
+    def ext_restriction: () -> (String)?
+    def ext_restriction=: (untyped value) -> untyped
+    def observable_id: () -> (String)?
+    def observable_id=: (untyped value) -> untyped
+    def additional_data: () -> (Array[Hash[String, untyped]])?
+    def additional_data=: (untyped value) -> untyped
+    def detect_time: () -> (String)?
+    def detect_time=: (untyped value) -> untyped
+    def start_time: () -> (String)?
+    def start_time=: (untyped value) -> untyped
+    def end_time: () -> (String)?
+    def end_time=: (untyped value) -> untyped
+    def recovery_time: () -> (String)?
+    def recovery_time=: (untyped value) -> untyped
+    def report_time: () -> (String)?
+    def report_time=: (untyped value) -> untyped
+    def purpose: () -> (String)?
+    def purpose=: (untyped value) -> untyped
+    def ext_purpose: () -> (String)?
+    def ext_purpose=: (untyped value) -> untyped
+    def status: () -> (String)?
+    def status=: (untyped value) -> untyped
+    def ext_status: () -> (String)?
+    def ext_status=: (untyped value) -> untyped
+    def lang: () -> (String)?
+    def lang=: (untyped value) -> untyped
+    def incident_id: () -> (Hash[String, untyped])?
+    def incident_id=: (untyped value) -> untyped
+    def alternative_id: () -> (Hash[String, untyped])?
+    def alternative_id=: (untyped value) -> untyped
+    def related_activity: () -> (Array[Hash[String, untyped]])?
+    def related_activity=: (untyped value) -> untyped
+    def generation_time: () -> (String)?
+    def generation_time=: (untyped value) -> untyped
+    def discovery: () -> (Array[Hash[String, untyped]])?
+    def discovery=: (untyped value) -> untyped
+    def assessment: () -> (Array[Assessment])?
+    def assessment=: (untyped value) -> untyped
+    def method: () -> (Array[Hash[String, untyped]])?
+    def method=: (untyped value) -> untyped
+    def contact: () -> (Array[Contact])?
+    def contact=: (untyped value) -> untyped
+    def event_data: () -> (Array[EventData])?
+    def event_data=: (untyped value) -> untyped
+    def indicator: () -> (Array[Indicator])?
+    def indicator=: (untyped value) -> untyped
+    def history: () -> (Hash[String, untyped])?
+    def history=: (untyped value) -> untyped
+  end
+  class Contact < Model
+    def restriction: () -> (String)?
+    def restriction=: (untyped value) -> untyped
+    def ext_restriction: () -> (String)?
+    def ext_restriction=: (untyped value) -> untyped
+    def additional_data: () -> (Array[Hash[String, untyped]])?
+    def additional_data=: (untyped value) -> untyped
+    def role: () -> (String)?
+    def role=: (untyped value) -> untyped
+    def ext_role: () -> (String)?
+    def ext_role=: (untyped value) -> untyped
+    def type: () -> (String)?
+    def type=: (untyped value) -> untyped
+    def ext_type: () -> (String)?
+    def ext_type=: (untyped value) -> untyped
+    def contact_name: () -> (Array[String | Hash[String, untyped]])?
+    def contact_name=: (untyped value) -> untyped
+    def contact_title: () -> (Array[String | Hash[String, untyped]])?
+    def contact_title=: (untyped value) -> untyped
+    def registry_handle: () -> (Array[Hash[String, untyped]])?
+    def registry_handle=: (untyped value) -> untyped
+    def postal_address: () -> (Array[Hash[String, untyped]])?
+    def postal_address=: (untyped value) -> untyped
+    def email: () -> (Array[Hash[String, untyped]])?
+    def email=: (untyped value) -> untyped
+    def telephone: () -> (Array[Hash[String, untyped]])?
+    def telephone=: (untyped value) -> untyped
+    def timezone: () -> (String)?
+    def timezone=: (untyped value) -> untyped
+    def contact: () -> (Array[Contact])?
+    def contact=: (untyped value) -> untyped
+  end
+  class Assessment < Model
+    def restriction: () -> (String)?
+    def restriction=: (untyped value) -> untyped
+    def ext_restriction: () -> (String)?
+    def ext_restriction=: (untyped value) -> untyped
+    def observable_id: () -> (String)?
+    def observable_id=: (untyped value) -> untyped
+    def additional_data: () -> (Array[Hash[String, untyped]])?
+    def additional_data=: (untyped value) -> untyped
+    def occurrence: () -> (String)?
+    def occurrence=: (untyped value) -> untyped
+    def incident_category: () -> (Array[String | Hash[String, untyped]])?
+    def incident_category=: (untyped value) -> untyped
+    def impact: () -> (Array[Hash[String, untyped]])?
+    def impact=: (untyped value) -> untyped
+    def counter: () -> (Array[Hash[String, untyped]])?
+    def counter=: (untyped value) -> untyped
+    def mitigating_factor: () -> (Array[String | Hash[String, untyped]])?
+    def mitigating_factor=: (untyped value) -> untyped
+    def cause: () -> (Array[String | Hash[String, untyped]])?
+    def cause=: (untyped value) -> untyped
+    def confidence: () -> (Hash[String, untyped])?
+    def confidence=: (untyped value) -> untyped
+  end
+  class EventData < Model
+    def restriction: () -> (String)?
+    def restriction=: (untyped value) -> untyped
+    def ext_restriction: () -> (String)?
+    def ext_restriction=: (untyped value) -> untyped
+    def observable_id: () -> (String)?
+    def observable_id=: (untyped value) -> untyped
+    def additional_data: () -> (Array[Hash[String, untyped]])?
+    def additional_data=: (untyped value) -> untyped
+    def detect_time: () -> (String)?
+    def detect_time=: (untyped value) -> untyped
+    def start_time: () -> (String)?
+    def start_time=: (untyped value) -> untyped
+    def end_time: () -> (String)?
+    def end_time=: (untyped value) -> untyped
+    def recovery_time: () -> (String)?
+    def recovery_time=: (untyped value) -> untyped
+    def report_time: () -> (String)?
+    def report_time=: (untyped value) -> untyped
+    def contact: () -> (Array[Contact])?
+    def contact=: (untyped value) -> untyped
+    def discovery: () -> (Array[Hash[String, untyped]])?
+    def discovery=: (untyped value) -> untyped
+    def assessment: () -> (Assessment)?
+    def assessment=: (untyped value) -> untyped
+    def method: () -> (Array[Hash[String, untyped]])?
+    def method=: (untyped value) -> untyped
+    def system: () -> (Array[Hash[String, untyped]])?
+    def system=: (untyped value) -> untyped
+    def expectation: () -> (Array[Hash[String, untyped]])?
+    def expectation=: (untyped value) -> untyped
+    def record_data: () -> (Array[Hash[String, untyped]])?
+    def record_data=: (untyped value) -> untyped
+    def event_data: () -> (Array[EventData])?
+    def event_data=: (untyped value) -> untyped
+  end
+  class Indicator < Model
+    def restriction: () -> (String)?
+    def restriction=: (untyped value) -> untyped
+    def ext_restriction: () -> (String)?
+    def ext_restriction=: (untyped value) -> untyped
+    def additional_data: () -> (Array[Hash[String, untyped]])?
+    def additional_data=: (untyped value) -> untyped
+    def indicator_id: () -> (Hash[String, untyped])?
+    def indicator_id=: (untyped value) -> untyped
+    def alternative_indicator_id: () -> (Array[Hash[String, untyped]])?
+    def alternative_indicator_id=: (untyped value) -> untyped
+    def start_time: () -> (String)?
+    def start_time=: (untyped value) -> untyped
+    def end_time: () -> (String)?
+    def end_time=: (untyped value) -> untyped
+    def confidence: () -> (Hash[String, untyped])?
+    def confidence=: (untyped value) -> untyped
+    def contact: () -> (Array[Contact])?
+    def contact=: (untyped value) -> untyped
+    def observable: () -> (Hash[String, untyped])?
+    def observable=: (untyped value) -> untyped
+    def uid_ref: () -> (String)?
+    def uid_ref=: (untyped value) -> untyped
+    def indicator_expression: () -> (Hash[String, untyped])?
+    def indicator_expression=: (untyped value) -> untyped
+    def indicator_reference: () -> (Hash[String, untyped])?
+    def indicator_reference=: (untyped value) -> untyped
+    def node_role: () -> (Array[Hash[String, untyped]])?
+    def node_role=: (untyped value) -> untyped
+    def attack_phase: () -> (Array[Hash[String, untyped]])?
+    def attack_phase=: (untyped value) -> untyped
+    def reference: () -> (Array[Hash[String, untyped]])?
+    def reference=: (untyped value) -> untyped
+  end
+end

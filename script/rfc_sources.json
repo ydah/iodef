@@ -1,0 +1,7 @@
+{
+  "sources": {
+    "rfc8727.xml": {"url": "https://www.rfc-editor.org/rfc/rfc8727.xml", "sha256": "c57fd364bd68f0c9a93f34678ae6bac602e1f67feff425ae1992cacfcd567694"},
+    "rfc7970.txt": {"url": "https://www.rfc-editor.org/rfc/rfc7970.txt", "sha256": "63e23655024199260e1deba59c9d4e2ae154f3e95bfc34aa2fae95e6826acd63"},
+    "iodef2.xml": {"url": "https://www.iana.org/assignments/iodef2/iodef2.xml", "sha256": "2495883357e4faaebf20e07d64e7dce3b254f0ebe2a730d0dfbcef2d0de2f984"}
+  }
+}
