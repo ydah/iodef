@@ -18,10 +18,11 @@ module Iodef
       validate! if strict && !@warnings.empty?
     end
 
-    def self.view(data, limits)
+    def self.view(data, limits, parent: nil)
       allocate.tap do |model|
         model.instance_variable_set(:@data, data)
         model.instance_variable_set(:@limits, limits)
+        model.instance_variable_set(:@parent, parent)
         model.instance_variable_set(:@warnings, [].freeze)
       end
     end
@@ -58,7 +59,7 @@ module Iodef
     end
 
     def description
-      MultilingualText.new(@data.fetch("Description", []), lang: @data["lang"])
+      MultilingualText.new(@data.fetch("Description", []), lang: effective_language)
     end
 
     def description=(value)
@@ -73,6 +74,12 @@ module Iodef
         define_method(method) { read_field(field, descriptor.delete_suffix("!")) }
         define_method("#{method}=") { |value| self[field] = value }
       end
+    end
+
+    protected
+
+    def effective_language
+      @data.fetch("lang") { @parent&.effective_language }
     end
 
     private
@@ -90,7 +97,7 @@ module Iodef
 
     def wrap(value, type)
       klass = TYPED[type]
-      klass && value.is_a?(Hash) ? klass.view(value, limits) : value
+      klass && value.is_a?(Hash) ? klass.view(value, limits, parent: self) : value
     end
   end
 
@@ -109,7 +116,7 @@ module Iodef
 
     def add_incident(purpose:, **attributes)
       value = { "purpose" => purpose }.merge(attributes.transform_keys(&:to_s))
-      incident = Incident.view(Iodef.copy(value, limits), limits)
+      incident = Incident.view(Iodef.copy(value, limits), limits, parent: self)
       yield incident if block_given?
       @data["Incident"] ||= []
       @data["Incident"] << incident.instance_variable_get(:@data)
@@ -132,7 +139,7 @@ module Iodef
 
     def add_contact(role:, type:, **attributes)
       value = { "role" => role, "type" => type }.merge(attributes.transform_keys(&:to_s))
-      contact = Contact.view(Iodef.copy(value, limits), limits)
+      contact = Contact.view(Iodef.copy(value, limits), limits, parent: self)
       yield contact if block_given?
       @data["Contact"] ||= []
       @data["Contact"] << contact.instance_variable_get(:@data)
@@ -162,11 +169,12 @@ module Iodef
 
     # Exact matches win; a language prefix and then an unlabelled value are fallbacks.
     def text(language = nil)
-      values = @values.map { |value| value.is_a?(String) ? { "value" => value, "lang" => @lang } : value }
+      values = @values.map { |value| value.is_a?(String) ? { "value" => value, "lang" => "en" } : value.merge("lang" => value.fetch("lang", @lang)) }
       language = language&.downcase
       selected = values.find { |value| value["lang"]&.downcase == language } if language
       selected ||= values.find { |value| value["lang"].to_s.downcase.split("-").first == language.split("-").first } if language
-      selected ||= values.find { |value| value["lang"].nil? || value["lang"].empty? }
+      fallback = @values.index { |value| value.is_a?(String) || value["lang"].nil? || value["lang"].empty? }
+      selected ||= values[fallback] if fallback
       (selected || values.first)&.fetch("value", nil)
     end
 

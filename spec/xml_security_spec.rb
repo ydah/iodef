@@ -59,6 +59,27 @@ RSpec.describe "XML input boundaries" do
     sources.each { |source| expect { IODEF.parse_xml(source) }.to raise_error(IODEF::ParseError) }
   end
 
+  it "rejects malformed processing-instruction targets in documents and XML extensions" do
+    %w[1target -target .target target@ :target target:name XML xMl].each do |target|
+      instruction = "<?#{target} private-data?>"
+      expect { IODEF.parse_xml(instruction + xml, strict: false) }.to raise_error(IODEF::ParseError) do |error|
+        expect(error.message).not_to include("private-data")
+      end
+      data = minimal.merge("AdditionalData" => [{ "dtype" => "xml", "value" => instruction }])
+      expect { IODEF::Document.new(data).to_xml }.to raise_error(IODEF::ConversionError)
+    end
+  end
+
+  it "preserves valid processing-instruction targets in XML extensions" do
+    %w[_target target-1 xml-stylesheet].each do |target|
+      instruction = "<?#{target} data?>"
+      data = minimal.merge("AdditionalData" => [{ "dtype" => "xml", "value" => instruction }])
+      output = IODEF::Document.new(data).to_xml
+      expect(output).to include(instruction)
+      expect(IODEF.parse_xml(output).to_h["AdditionalData"]).to eq(data["AdditionalData"])
+    end
+  end
+
   it "rejects duplicate attributes, undeclared prefixes, and namespace substitutions" do
     sources = [
       xml.sub('purpose="reporting"', 'purpose="reporting" purpose="traceback"'),

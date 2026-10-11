@@ -79,4 +79,54 @@ RSpec.describe IODEF::Document do
     expect(IODEF::MultilingualText.new({ "value" => "x", "lang" => "en" }).text("de")).to eq("x")
     expect(IODEF::MultilingualText.new([]).text).to be_nil
   end
+
+  it "treats plain JSON descriptions as English regardless of the incident language" do
+    data = minimal
+    data["Incident"][0].merge!("lang" => "ja", "Description" => ["English", { "value" => "日本語", "lang" => "ja" }])
+    text = described_class.new(data).incidents.first.description
+    expect(text.text("ja")).to eq("日本語")
+    expect(text.text("en")).to eq("English")
+    expect(text.text).to eq("English")
+    expect(text.text("de")).to eq("English")
+  end
+
+  it "inherits language for unlabelled multilingual objects through mutable typed views" do
+    data = minimal
+    data["lang"] = "ja"
+    data["Incident"][0]["Description"] = ["English", { "value" => "継承" }]
+    data["Incident"][0]["Contact"][0]["Description"] = ["English", { "value" => "連絡先" }]
+    document = described_class.new(data)
+    incident = document.incidents.first
+    contact = incident.contacts.first
+    expect(incident.description.text("ja")).to eq("継承")
+    expect(contact.description.text("ja")).to eq("連絡先")
+    document.lang = "fr"
+    expect(contact.description.text("fr")).to eq("連絡先")
+    incident.lang = "de"
+    expect(contact.description.text("de")).to eq("連絡先")
+    incident.lang = ""
+    expect(contact.description.text("en")).to eq("English")
+    expect(contact.description.text).to eq("English")
+    expect(document.to_h).to eq(data.merge("lang" => "fr", "Incident" => [data["Incident"][0].merge("lang" => "")]))
+  end
+
+  it "prefers inherited and explicit language matches before falling back to plain strings" do
+    text = IODEF::MultilingualText.new(["English", { "value" => "日本語" }, { "value" => "reset", "lang" => "" }], lang: "ja-JP")
+    expect(text.text("ja")).to eq("日本語")
+    expect(text.text("en")).to eq("English")
+    expect(text.text("de")).to eq("English")
+    expect(text.text).to eq("English")
+  end
+
+  it "keeps language inheritance in builder-created child views" do
+    document = described_class.new(minimal.merge("lang" => "ja"))
+    incident = document.add_incident(purpose: "reporting") do |item|
+      item.description = ["English", { "value" => "事象" }]
+      item.add_contact(role: "creator", type: "organization") { |contact| contact.description = ["English", { "value" => "窓口" }] }
+    end
+    expect(incident.description.text("ja")).to eq("事象")
+    expect(incident.contacts.first.description.text("ja")).to eq("窓口")
+    incident.description = ["English", { "value" => "unspecified", "lang" => "" }]
+    expect(incident.description.text("ja")).to eq("English")
+  end
 end

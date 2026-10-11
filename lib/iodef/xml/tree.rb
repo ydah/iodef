@@ -8,6 +8,7 @@ module Iodef
     Node = Data.define(:name, :uri, :local, :attributes, :namespaces, :parts, :lang)
     Markup = Data.define(:kind, :value)
     ENTITIES = { "amp" => "&", "lt" => "<", "gt" => ">", "quot" => '"', "apos" => "'" }.freeze
+    PI_TARGET = /\A#{REXML::XMLTokens::NCNAME_STR}\z/u.freeze
 
     def initialize(limits)
       @limits = limits
@@ -91,6 +92,7 @@ module Iodef
         when :comment
           append(stack.last, Markup.new(:comment, event[0])) unless stack.empty?
         when :processing_instruction
+          raise ParseError, "invalid XML processing instruction target" unless PI_TARGET.match?(event[0])
           raise ParseError, "reserved XML processing instruction" if event[0].downcase == "xml"
 
           append(stack.last, Markup.new(:instruction, [event[0], event[1]].join(" "))) unless stack.empty?
