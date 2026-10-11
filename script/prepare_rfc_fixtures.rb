@@ -55,9 +55,10 @@ module RFCFixtures
     json_cddl = cddl.gsub(/^iodef-([\w-]+) = -?\d+$/) { "iodef-#{Regexp.last_match(1)} = #{Regexp.last_match(1).to_json}" }
     json_cddl = json_cddl.gsub(/\b(?:tdate|uri|eb64legacy)\b/, "text").gsub(/\bfloat32\b/, "number")
     File.write(File.join(DIRECTORY, "iodef-json.cddl"), json_cddl)
+    prepare_xml_examples
     File.write(File.join(DIRECTORY, "LICENSE"), <<~NOTICE)
-      Temporary conformance data extracted from RFC 8727.
-      Copyright (c) 2020 IETF Trust and the persons identified as document authors.
+      Temporary conformance data extracted from RFC 7970 and RFC 8727.
+      Copyright (c) 2016, 2020 IETF Trust and the persons identified as document authors.
       All rights reserved.
       Redistribution and use in source and binary forms, with or without
       modification, is permitted pursuant to, and subject to the license terms
@@ -66,12 +67,42 @@ module RFCFixtures
       (https://trustee.ietf.org/license-info).
       Full original documents, copyright notices and authors are in ../sources/.
       Source: https://www.rfc-editor.org/rfc/rfc8727.xml
+      Source: https://www.rfc-editor.org/rfc/rfc7970.txt
       Corrections: campaign string presentation wrapping; verified erratum 7334
       closes the missing BusinessImpact map brace in CDDL. The JSON oracle uses
       text property names, textual dates/URIs/base64 and JSON number primitives.
       Original examples and original CDDL are retained adjacent to corrections.
+      RFC 7970 XML examples: page headers, footers and document indentation
+      are removed. Section 7.2 changes BulkObservable type "fqdn" to
+      "domain-name", following sections 3.29.3.1 and 8 and reported (not
+      verified) erratum 6163: https://www.rfc-editor.org/errata/eid6163.
+      The original XML is retained alongside the corrected example; all four
+      campaign domains and string whitespace are preserved.
     NOTICE
     puts "Verified reference sources and prepared temporary RFC examples"
+  end
+
+  def prepare_xml_examples
+    source = File.read(File.join(ROOT, "sources/rfc7970.txt"))
+    text = source.lines.reject do |line|
+      line.start_with?("Danyliw ", "RFC 7970 ") || line.include?("\f")
+    end.join
+    examples = text.match(/^7\.  Examples\n(.*?)^8\.  The IODEF Data Model/m)&.captures&.first
+    raise "RFC 7970 example section missing" unless examples
+
+    documents = examples.scan(/<\?xml version="1\.0".*?<\/IODEF-Document>/m)
+    raise "Expected two complete RFC 7970 XML examples" unless documents.length == 2
+
+    documents.each_with_index do |document, index|
+      original = "#{document.gsub(/^ {3}/, "")}\n"
+      name = "rfc7970-section-7.#{index + 1}"
+      File.write(File.join(DIRECTORY, "#{name}.original.xml"), original)
+      # The printed campaign example uses a value absent from its own enumeration.
+      corrected = original.sub('<BulkObservable type="fqdn">', '<BulkObservable type="domain-name">')
+      raise "Invalid RFC 7970 XML example" unless REXML::Document.new(corrected).root&.name == "IODEF-Document"
+
+      File.write(File.join(DIRECTORY, "#{name}.xml"), corrected)
+    end
   end
 end
 

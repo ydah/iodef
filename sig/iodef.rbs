@@ -8,6 +8,7 @@ module Iodef
 
   def self.parse: (String source, ?strict: bool, ?validate: bool, **Integer limits) -> Document
   def self.parse_cbor: (String source, ?strict: bool, ?validate: bool, **Integer limits) -> Document
+  def self.parse_xml: (String source, ?strict: bool, ?validate: bool, **Integer limits) -> Document
   def self.validate: (untyped source, **Integer limits) -> Array[Violation]
   def self.generate_json: (untyped value, ?untyped options) -> String
   def self.pointer: (String parent, untyped key) -> String
@@ -62,6 +63,7 @@ module Iodef
     def incidents: () -> Array[Incident]
     def add_incident: (purpose: String, **untyped attributes) ?{ (Incident) -> untyped } -> Incident
     def to_cbor: () -> String
+    def to_xml: () -> String
   end
   class Incident < Model
     def contacts: () -> Array[Contact]
