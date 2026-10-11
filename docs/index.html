@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Build, validate, and exchange IODEF v2 incident reports in Ruby. Work with JSON and CBOR from RFC 8727, plus supported XML structures from RFC 7970.">
+  <meta name="theme-color" content="#f8fafc">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="iodef — Exchange incident reports across three formats">
+  <meta property="og:description" content="Build, validate, and exchange IODEF v2 incident reports in Ruby. Work with JSON and CBOR from RFC 8727, plus supported XML structures from RFC 7970.">
+  <meta property="og:url" content="https://ydah.github.io/iodef/">
+  <title>iodef — Exchange incident reports across three formats</title>
+  <link rel="canonical" href="https://ydah.github.io/iodef/">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="./" aria-label="iodef home"><img src="favicon.svg" width="32" height="32" alt=""><span>iodef</span></a>
+      <nav class="nav" aria-label="Main navigation">
+        <a href="#installation">Installation</a>
+        <a href="https://github.com/ydah/iodef#readme">Documentation</a>
+        <a href="https://github.com/ydah/iodef">GitHub</a>
+      </nav>
+    </div>
+  </header>
+  <main id="main" class="container" tabindex="-1">
+    <section class="hero" aria-labelledby="title">
+      <div class="hero-copy">
+        <p class="format">IODEF v2 / JSON · CBOR · XML</p>
+        <h1 id="title">Exchange incident reports across three formats</h1>
+        <p class="intro">Build, validate, and exchange IODEF v2 incident reports in Ruby. Work with JSON and CBOR from RFC 8727, plus supported XML structures from RFC 7970.</p>
+        <div class="actions">
+          <a class="button" href="#installation">Get started</a>
+          <a class="text-link" href="https://github.com/ydah/iodef#readme">Read the documentation</a>
+        </div>
+        <p class="metadata"><span>Ruby 3.3+</span><a href="https://github.com/ydah/iodef/blob/main/LICENSE.txt">MIT license</a><a href="https://rubygems.org/gems/iodef">RubyGems</a></p>
+      </div>
+      <figure class="example" id="quick-start">
+        <figcaption><span>Quick start</span><span>Ruby</span></figcaption>
+        <pre tabindex="0" role="region" aria-label="Ruby quick start example"><code>require <span class="token-string">&quot;</span><span class="token-string">iodef</span><span class="token-string">&quot;</span>
+
+document = IODEF::Document.build(lang: <span class="token-string">&quot;</span><span class="token-string">en</span><span class="token-string">&quot;</span>) <span class="token-keyword">do</span> |doc|
+  doc.add_incident(purpose: <span class="token-string">&quot;</span><span class="token-string">reporting</span><span class="token-string">&quot;</span>) <span class="token-keyword">do</span> |incident|
+    incident.incident_id = { id: <span class="token-string">&quot;</span><span class="token-string">case-24</span><span class="token-string">&quot;</span>, name: <span class="token-string">&quot;</span><span class="token-string">response.example</span><span class="token-string">&quot;</span> }
+    incident.generation_time = <span class="token-string">&quot;</span><span class="token-string">2026-10-01T09:00:00Z</span><span class="token-string">&quot;</span>
+    incident.description = [<span class="token-string">&quot;</span><span class="token-string">Unexpected traffic</span><span class="token-string">&quot;</span>, { value: <span class="token-string">&quot;</span><span class="token-string">不審な通信</span><span class="token-string">&quot;</span>, lang: <span class="token-string">&quot;</span><span class="token-string">ja</span><span class="token-string">&quot;</span> }]
+    incident.add_contact(role: <span class="token-string">&quot;</span><span class="token-string">creator</span><span class="token-string">&quot;</span>, type: <span class="token-string">&quot;</span><span class="token-string">organization</span><span class="token-string">&quot;</span>) <span class="token-keyword">do</span> |contact|
+      contact.contact_name = [<span class="token-string">&quot;</span><span class="token-string">Response team</span><span class="token-string">&quot;</span>]
+      contact.email = [{ <span class="token-string">&quot;</span><span class="token-string">EmailTo</span><span class="token-string">&quot;</span> =&gt; <span class="token-string">&quot;</span><span class="token-string">response@response.example</span><span class="token-string">&quot;</span> }]
+    <span class="token-keyword">end</span>
+  <span class="token-keyword">end</span>
+<span class="token-keyword">end</span>
+
+json = document.to_json
+copy = IODEF.parse(json)
+copy.incidents.first.incident_id
+copy.incidents.first.contacts.first.role <span class="token-comment"># =&gt; &quot;creator&quot;
+</span>copy.incidents.first.description.text(<span class="token-string">&quot;</span><span class="token-string">ja</span><span class="token-string">&quot;</span>) <span class="token-comment"># =&gt; &quot;不審な通信&quot;
+</span>IODEF.validate(json) <span class="token-comment"># =&gt; []</span></code></pre>
+      </figure>
+    </section>
+    <ul class="features" aria-label="Features">
+        <li><h2>Build reports</h2><p>Use typed incident and contact models with multilingual descriptions and explicit reporting identities.</p></li>
+        <li><h2>Convert formats</h2><p>Read and write JSON, built-in CBOR, and namespace-aware XML using the same document model.</p></li>
+        <li><h2>Locate problems</h2><p>Validate report structure with JSON Pointer diagnostics and configurable size, depth, and collection limits.</p></li>
+    </ul>
+    <section class="section" id="installation" aria-labelledby="installation-title">
+      <h2 id="installation-title">Installation</h2>
+      <div class="section-body">
+        <p>Add the gem to your Gemfile:</p>
+        <pre class="install-command" tabindex="0" role="region" aria-label="Gemfile entry"><code>gem "iodef"</code></pre>
+        <p>Run <code>bundle install</code>, then try the <a href="#quick-start">quick start</a>. Requires Ruby 3.3 or later.</p>
+        <p>For supported dependencies and optional integrations, see the <a href="https://github.com/ydah/iodef#installation">installation guide</a>.</p>
+      </div>
+    </section>
+    <section class="section" aria-labelledby="scope-title">
+      <h2 id="scope-title">Scope &amp; documentation</h2>
+      <div class="section-body">
+        <p>XML input must be UTF-8. XML Schema validation, XML Signature conversion, and ambiguous extension mappings are outside scope. Conversion preserves supported report data, not original XML formatting or signatures, and does not authenticate incident facts.</p>
+        <p><a href="https://github.com/ydah/iodef#readme">Read the full documentation</a> for supported formats, examples, and API details.</p>
+        
+        <ul class="resource-links" aria-label="Project resources">
+          <li><a href="https://github.com/ydah/iodef/blob/main/CHANGELOG.md">Changelog</a></li>
+          <li><a href="https://github.com/ydah/iodef/issues">Report an issue</a></li>
+          <li><a href="https://github.com/ydah/iodef/blob/main/SECURITY.md">Security</a></li>
+          <li><a href="https://github.com/ydah/iodef#contributing">Contributing</a></li>
+        </ul>
+      </div>
+    </section>
+  </main>
+  <footer class="container site-footer">
+    <div class="footer-top"><p>iodef · Maintained by <a href="https://github.com/ydah">ydah</a></p><p>Open source under the <a href="https://github.com/ydah/iodef/blob/main/LICENSE.txt">MIT license</a>.</p></div>
+    <nav class="related" aria-label="Related Ruby gems">
+      <p>More Ruby gems for structured data</p>
+      <ul>
+          <li><a href="https://ydah.github.io/dns_json/">dns_json</a></li>
+          <li><a href="https://ydah.github.io/jcard_jcal/">jcard_jcal</a></li>
+          <li><a href="https://ydah.github.io/jscalendar/">jscalendar</a></li>
+          <li><a href="https://ydah.github.io/jscontact/">jscontact</a></li>
+          <li><a href="https://ydah.github.io/sd_jwt/">sd_jwt</a></li>
+          <li><a href="https://ydah.github.io/senml/">senml</a></li>
+          <li><a href="https://ydah.github.io/yang_json/">yang_json</a></li>
+      </ul>
+    </nav>
+  </footer>
+</body>
+</html>
