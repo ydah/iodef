@@ -20,12 +20,6 @@
 
 Read, validate, build, and exchange IODEF v2 incident reports as JSON, CBOR, or XML ([RFC 8727](https://www.rfc-editor.org/rfc/rfc8727.html) and [RFC 7970](https://www.rfc-editor.org/rfc/rfc7970.html)).
 
-## Features
-
-- Build incident reports with typed models and multilingual descriptions.
-- Exchange JSON, built-in CBOR, and namespace-aware RFC 7970 XML.
-- Validate reports with JSON Pointer diagnostics and configurable resource limits.
-
 ## Installation
 
 Add the gem to your Gemfile:
@@ -36,7 +30,7 @@ gem "iodef"
 
 Then run `bundle install`.
 
-Ruby 3.3 or newer, JRuby, and TruffleRuby are supported. Runtime dependencies are the Ruby standard libraries `json` (2.19.4 or newer, including 3.x) and `rexml` (3.4.4 or newer, below 4); no other gem from this project is required. `IODEF` and `Iodef` refer to the same module.
+Requires Ruby 3.3 or later, `json` >= 2.19.4 and < 4, and `rexml` >= 3.4.4 and < 4. `IODEF` and `Iodef` refer to the same module.
 
 ## Quick start
 
@@ -98,7 +92,7 @@ copy = IODEF.parse_cbor(bytes)
 
 All 207 numeric map keys are supported. The encoder uses date tag 0, base64 byte-string tag 22, hexadecimal byte-string tag 23, and URI tag 32. Dates and URI spelling are preserved. Typed byte content becomes binary; hex output uses uppercase. The decoder also accepts contextually untagged strings/bytes, as used in the RFC's own CBOR examples. Integer bignums are preserved. IODEF real values are encoded as float32; values that would round or overflow raise `ConversionError`. Unknown JSON floats keep their original precision.
 
-Unknown CBOR tags, unassigned integer keys, and opaque byte strings without an IODEF type cannot be represented unambiguously in JSON and raise `ConversionError`. Duplicate/colliding keys, invalid UTF-8, excessive nesting, large collections, and trailing data are rejected during bounded decoding. JSON and CBOR are tested on CRuby, JRuby, and TruffleRuby, including CRuby development builds. No separate CBOR gem is required.
+Unknown CBOR tags, unassigned integer keys, and opaque byte strings without an IODEF type cannot be represented unambiguously in JSON and raise `ConversionError`. Duplicate/colliding keys, invalid UTF-8, excessive nesting, large collections, and trailing data are rejected during bounded decoding. No separate CBOR gem is required.
 
 ## XML
 
@@ -131,15 +125,11 @@ Numeric literals use Ruby integers and floats. Other consumers that apply XML Sc
 | CBOR, numeric keys, typed binary values | Signing, encryption, threat correlation |
 | RBS signatures and bounded validation | Authenticating senders or verifying referenced evidence |
 
-The property metadata in `data/` describes the RFC field names, types, cardinalities, and protocol identifiers. CDDL, JSON Schema, RFC examples, and IANA source downloads are not embedded in the package. Tests inspect the downloaded CDDL as reference data; no third-party CDDL or CBOR implementation is loaded.
-
 ### Specification differences
-
-RFC 8727's CDDL has a verified missing-brace correction ([erratum 7334](https://www.rfc-editor.org/errata/eid7334)). The temporary reference schema applies it. Its section 4.2 JSON example needs presentation-wrapped strings joined; the original text is retained beside the corrected fixture. Both complete JSON and CBOR examples are tested.
 
 The JSON examples use version `2.0`; the XML information model uses `2.00`. JSON and CBOR accept and preserve both spellings; XML output uses `2.00`. Required nonempty child groups and conditional values follow RFC 7970: nonnumeric `Confidence` omits `value`, numeric confidence requires it; a node can include both addresses and domain data; `HashData` supports `ext-scope`. `RelatedActivity.Description` accepts multilingual strings. These constraints are not all accurately expressed in the RFC 8727 CDDL. The section 2.2.5 illustration uses a CWE `SpecID` absent from its normative enum: use `private` with `ext-SpecID` for that extension.
 
-The pinned IANA registry and RFC have differing spellings for `breach-propietary` / `breach-proprietary`, `anonymization` / `anomyzation`, and `ntp-stamp` / `ntpstamp`; both are accepted. RFC 8727 additionally defines the `json` extension data type. This library validates format and structure, not whether a reported address, software identifier, or incident fact is authentic.
+The IANA registry and RFC have differing spellings for `breach-propietary` / `breach-proprietary`, `anonymization` / `anomyzation`, and `ntp-stamp` / `ntpstamp`; both are accepted. RFC 8727 additionally defines the `json` extension data type.
 
 ## Development
 
@@ -151,9 +141,9 @@ bundle exec rbs -I sig validate
 bundle exec ruby script/benchmark.rb 5000
 ```
 
-The fixture task verifies SHA-256-pinned RFC/IANA sources, retains source notices, and regenerates examples under ignored `tmp/rfc/`. Tests check both complete RFC JSON and CBOR examples, both complete RFC 7970 XML documents, every CDDL object property, and the numeric map assignments. The printed XML campaign example uses the unregistered `fqdn` value; its derived fixture uses `domain-name` as described in [reported erratum 6163](https://www.rfc-editor.org/errata/eid6163), while the original remains a negative test. Original wire-format tests cover integer widths, floating-point precision, UTF-8 chunk boundaries, duplicate keys, tags, malformed values, limits, and randomized round trips. XML tests cover namespaces, language inheritance, escaping, DTD rejection, and bounded parsing. Reference data keeps its own license and notices even though it is not distributed with the gem.
+The first test run downloads RFC/IANA fixtures into ignored `tmp/` directories and requires network access.
 
-`script/update_registry.rb` audits the pinned IANA metadata. `--refresh` downloads the current registry, rejects unexplained differences, and updates its checksum only after the audit succeeds. Review RFC errata and registry changes before refreshing. No downloaded reference material is tracked or included in the gem.
+Run `bundle exec ruby script/update_registry.rb` to check IANA metadata. Use `--refresh` to download registry updates; review any reported differences before updating the metadata.
 
 ## Contributing
 
@@ -161,4 +151,4 @@ Bug reports and pull requests are welcome on [GitHub](https://github.com/ydah/io
 
 ## License
 
-Project code is MIT licensed; see [LICENSE.txt](LICENSE.txt). Added library dependencies are limited to MIT-licensed libraries. Ruby implementations and standard/default libraries (including JSON and REXML) are exceptions and retain their own licenses. Downloaded standards material is test reference data under its source terms and is neither committed nor packaged. These statements do not relicense third-party material.
+Released under the [MIT License](LICENSE.txt).
